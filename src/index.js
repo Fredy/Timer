@@ -1,3 +1,5 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css'
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -71,6 +73,9 @@ class TimeOutput extends React.Component {
   }
 
   tick() {
+    if (this.state.isPaused) {
+      return;
+    }
     this.setState({
       seconds: this.state.seconds - 1
     });
@@ -107,11 +112,17 @@ class TimeOutput extends React.Component {
     const time = this.parseTime();
     return (
       <div>
-        <div> {time} </div>
-        <button onClick={this.handlePause}> 
+        <div className="time-text pb-3"> {time} </div>
+        <button 
+          onClick={this.handlePause}
+          className="btn btn-lg btn-outline-success mx-2"
+        > 
           {this.state.isPaused? 'Continue' : 'Pause'} 
         </button>
-        <button onClick={this.handleReset}> Reset </button>
+        <button 
+          onClick={this.handleReset}
+          className="btn btn-lg btn-outline-danger mx-2"
+        > Reset </button>
       </div>
     );
   }
@@ -143,13 +154,20 @@ class TimeInput extends React.Component {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
+      <form 
+        onSubmit={this.handleSubmit}
+        className="form-input"
+      >
         <input 
           type="text" placeholder="Time..." 
           value={this.props.value}
           onChange={this.handleChange}
+          className="form-control form-control-lg text-center"
         />
-        <input type="submit" value="Start" />
+        <input 
+          type="submit" value="Start" 
+          className="btn btn-lg btn-block btn-outline-primary my-2"
+        />
       </form>
     );
   }
@@ -186,8 +204,8 @@ class Timer extends React.Component {
 
   render() {
     return (
-      <div>
-        <h1> Timer </h1>
+      <div className="mx-4 text-center align-middle">
+        <h1 className="display-3 font-weight-light text-secondary"> Timer </h1>
         {this.state.started ? (
           <TimeOutput 
             onReset={this.handleStop}

@@ -1,0 +1,31 @@
+.form-input{
+  width:100%;
+  max-width:330px;
+  margin:auto;
+}
+
+.vertical-center {
+  min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
+  min-height: 100vh; /* These two lines are counted as one :-)       */
+
+  display: flex;
+  align-items: center;
+}
+
+.time-text {
+ width:100vw;
+ font-size:12vw;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 90px;
+  background-color: #f5f5f5;
+}
