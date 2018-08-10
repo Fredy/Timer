@@ -1,15 +1,93 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+const TIME_REGEX_A = /(?:(\d+)\s*(?:hours?|h)(?![a-z]))?\s*(?:(\d+)\s*(?:minutes?|m)(?![a-z]))?\s*(?:(\d+)\s*(?:seconds?|s)(?![a-z]))?/i;
+const TIME_REGEX_B = /^(?:(\d+):)?(\d+):(\d+)$/;
+
+const MINUTES_ERROR = 'When you use minutes and seconds, minutes should be less than 60.';
+const SECONDS_ERROR = 'When you use minutes and seconds, seconds should be less than 60.';
+const SYNTAX_ERROR = 'You used the incorrect syntax.';
+
+function calcSeconds(hours, minutes, seconds) {
+  if (!hours) {
+    hours = 0;
+  }
+  if (!minutes) {
+    minutes = 0;
+  }
+  if (!seconds) {
+    seconds = 0;
+  }
+
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+function parseInputTime(timeValue) {
+  if (!timeValue) {
+    return null;
+  }
+  let res = TIME_REGEX_B.exec(timeValue);
+  if (!res || !res[0]) {
+    res = TIME_REGEX_A.exec(timeValue);
+  }
+  if (!res || !res[0]) {
+    return {error: SYNTAX_ERROR};
+  }
+
+  let hours = parseInt(res[1], 10);
+  let minutes = parseInt(res[2], 10);
+  let seconds = parseInt(res[3], 10);
+  if (!isNaN(seconds) && minutes && minutes > 59) {
+    return {error: MINUTES_ERROR};
+  } 
+  if (!isNaN(minutes) && seconds && seconds > 59) {
+    return {error: SECONDS_ERROR};
+  }
+
+  return {seconds: calcSeconds(hours, minutes, seconds)};
+}
+
 class TimeOutput extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       isPaused: false,
+      seconds: props.value,
     };
 
     this.handlePause = this.handlePause.bind(this);
     this.handleReset = this.handleReset.bind(this);
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.tick(),
+      1000
+    );
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  tick() {
+    this.setState({
+      seconds: this.state.seconds - 1
+    });
+    if (this.state.seconds === 0) {
+      clearInterval(this.timerID);
+      alert('time'); // TODO: play alarm sound.
+    }
+  }
+
+  parseTime() {
+    const seconds = this.state.seconds % 60;
+    const remMin = Math.floor(this.state.seconds / 60)
+    const minutes = remMin % 60;
+    const hours = Math.floor(remMin / 60);
+
+    return `${hours}h ${minutes}m ${seconds}s`; 
+    // TODO: don't show hours/minutes if its value is 0, 
   }
 
   handlePause() {
@@ -19,17 +97,17 @@ class TimeOutput extends React.Component {
   }
 
   handleReset() {
-    this.props.handleStop();
+    this.props.onReset();
     this.setState({
       isPaused: false,
     });
   }
 
-
   render() {
+    const time = this.parseTime();
     return (
       <div>
-        <div> 00:00:00 </div>
+        <div> {time} </div>
         <button onClick={this.handlePause}> 
           {this.state.isPaused? 'Continue' : 'Pause'} 
         </button>
@@ -42,24 +120,25 @@ class TimeOutput extends React.Component {
 class TimeInput extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      value: '',
-    };
-
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange(event) {
-    this.setState({
-      value: event.target.value,
-    });
+    this.props.onValueChange(event.target.value);
   }
-  
+
   handleSubmit(event) {
-    // TODO: do something with event.target.value
-    this.props.handleStart();
     event.preventDefault();
+    if(!this.props.value) {
+      return;
+    }
+    let parsed = parseInputTime(this.props.value);
+    if (parsed.error) {
+      alert(parsed.error); // TODO: show and error.
+      return
+    }
+    this.props.onButtonPressed(parsed.seconds);
   }
 
   render() {
@@ -67,7 +146,7 @@ class TimeInput extends React.Component {
       <form onSubmit={this.handleSubmit}>
         <input 
           type="text" placeholder="Time..." 
-          value={this.state.value}
+          value={this.props.value}
           onChange={this.handleChange}
         />
         <input type="submit" value="Start" />
@@ -81,22 +160,28 @@ class Timer extends React.Component {
     super(props);
     this.state = {
       started: false, 
+      rawValue: '',
+      parsedValue: 0
     };
 
     this.handleStart = this.handleStart.bind(this);
     this.handleStop = this.handleStop.bind(this);
+    this.handleValueChange = this.handleValueChange.bind(this);
   }
 
-  handleStart() {
-    this.setState({
+  handleStart(parsed) {
+    this.setState({ 
       started: true,
+      parsedValue: parsed
     });
   }
 
   handleStop() {
-    this.setState({
-      started: false,
-    });
+    this.setState({ started: false });
+  }
+
+  handleValueChange(value) {
+    this.setState({ rawValue: value });
   }
 
   render() {
@@ -104,9 +189,16 @@ class Timer extends React.Component {
       <div>
         <h1> Timer </h1>
         {this.state.started ? (
-          <TimeOutput handleStop={this.handleStop}/> 
+          <TimeOutput 
+            onReset={this.handleStop}
+            value={this.state.parsedValue}
+          /> 
         ) : (
-          <TimeInput handleStart={this.handleStart}/>
+          <TimeInput 
+            onButtonPressed={this.handleStart}
+            onValueChange={this.handleValueChange}
+            value={this.state.rawValue}
+          />
         )}
       </div>
     );
