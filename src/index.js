@@ -204,7 +204,7 @@ class Timer extends React.Component {
 
   render() {
     return (
-      <div className="mx-4 text-center align-middle">
+      <div className="text-center">
         <h1 className="display-3 font-weight-light text-secondary"> Timer </h1>
         {this.state.started ? (
           <TimeOutput 

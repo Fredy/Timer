@@ -12,9 +12,14 @@
   align-items: center;
 }
 
+
 .time-text {
  width:100vw;
  font-size:12vw;
+}
+
+@media (min-width: 1000px) {
+    .time-text{font-size: 90px;}
 }
 
 html,
