@@ -1,5 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.css'
+import './index.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -9,6 +9,8 @@ const TIME_REGEX_B = /^(?:(\d+):)?(\d+):(\d+)$/;
 const MINUTES_ERROR = 'When you use minutes and seconds, minutes should be less than 60.';
 const SECONDS_ERROR = 'When you use minutes and seconds, seconds should be less than 60.';
 const SYNTAX_ERROR = 'You used the incorrect syntax.';
+
+const AUDIO_PATH = process.env.PUBLIC_URL + '/alarm.mp3'
 
 function calcSeconds(hours, minutes, seconds) {
   if (!hours) {
@@ -52,6 +54,7 @@ function parseInputTime(timeValue) {
 class TimeOutput extends React.Component {
   constructor(props) {
     super(props);
+    this.sound = new Audio(AUDIO_PATH);
     this.state = {
       isPaused: false,
       seconds: props.value,
@@ -81,7 +84,8 @@ class TimeOutput extends React.Component {
     });
     if (this.state.seconds === 0) {
       clearInterval(this.timerID);
-      alert('time'); // TODO: play alarm sound.
+      this.sound.loop = true;
+      this.sound.play();
     }
   }
 
@@ -102,6 +106,7 @@ class TimeOutput extends React.Component {
   }
 
   handleReset() {
+    this.sound.pause();
     this.props.onReset();
     this.setState({
       isPaused: false,
@@ -116,6 +121,7 @@ class TimeOutput extends React.Component {
         <button 
           onClick={this.handlePause}
           className="btn btn-lg btn-outline-success mx-2"
+          disabled={this.state.seconds === 0}
         > 
           {this.state.isPaused? 'Continue' : 'Pause'} 
         </button>
